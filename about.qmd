@@ -1,9 +1,39 @@
 ---
-title: "About"
+title: "Sajal Shrestha"
+about: 
+  id: about-sajalshres
+  template: trestles
+  image: assets/me.JPG
+  image-shape: rounded
+  links:
+    - icon: envelope
+      text: Email
+      href: mailto:sajal.shres@gmail.com
+    - icon: linkedin
+      text: Linkedin
+      href: https://www.linkedin.com/in/sajalshres/
+    - icon: twitter
+      text: Twitter
+      href: https://twitter.com/sajalshres
+    - icon: github
+      text: GitHub
+      href: https://github.com/sajalshres
 ---
 
-About this site
+## 🧑🏻‍💻 About
 
-```{r}
-1 + 1
-```
+My name is Sajal. The phonetic spelling of my name is **sa-jal**. I love writing code and learning things about it.
+
+## 🎓 Education
+
+**Grand Valley State University** | Grand Rapids, MI
+
+M.S in Data Science and Analytics | December 2021 - Present
+
+## 👨‍💻 Experience
+
+**Cotiviti** | Senior Software Engineer | Mar 2019 - Dec 2021
+
+**Cotiviti** | Devops Engineer | Apr 2017 - Nov 2020
+
+**Cerner** | System Engineer | Jan 2016 - Apr 2017

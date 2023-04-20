@@ -1,5 +1,5 @@
 ---
-title: "qaurto-website"
+title: "Introduction"
 ---
 
 This is a Quarto website.

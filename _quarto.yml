@@ -2,18 +2,71 @@ project:
   type: website
 
 website:
-  title: "qaurto-website"
-  navbar:
-    left:
-      - href: index.qmd
-        text: Home
-      - about.qmd
+  page-navigation: true
+  title: "STA631 Statistics Modeling and Regression Portfolio"
+  description: "Portfolio"
+  site-url: "https://sajalshres.github.io"
+  
+  open-graph: true
+
+  page-footer:
+    right: "This page is built with ❤️ using [Quarto](https://quarto.org/)."
+    left: "&copy; Copyright 2023, Sajal Shrestha"
+    background: "#fceed1"
+    border: true
+  
+  sidebar:
+    background: "#fceed1"
+    logo: "assets/logo.png"
+    pinned: true
+    align: center
+    tools:
+      - icon: github
+        href: https://github.com/sajalshres
+        text: "GitHub organization"
+      - icon: code-square
+        href: https://github.com/sajalshres/gvsu-sta631-portfolio
+        text: "Source Code"
+    
+    style: "docked"
+    search: true
+    collapse-level: 1
+    contents:
+      - text: Introduction
+        href: index.qmd
+      - section: "Course Objectives"
+        contents:
+        - href: "objectives/objective-1.qmd"
+          text: 1. Statistical Modeling
+        - href: "objectives/objective-2.qmd"
+          text: 2. Generalized Linear Modeling
+        - href: "objectives/objective-3.qmd"
+          text: 3. Model Selection
+        - href: "objectives/objective-4.qmd"
+          text: 4. Communicating Results
+        - href: "objectives/objective-5.qmd"
+          text: 5. Programming Statistical Models
+      - section: "Artifacts"
+        contents:
+          - href: artifacts/project.qmd
+            text: Project
+      - text: About
+        href: about.qmd
+        
 
 format:
   html:
-    theme: cosmo
-    css: styles.css
+    grid:
+      sidebar-width: 350px
+    theme:
+      light: [cosmo, theme.scss]
+      dark: [cosmo, theme-dark.scss]
+    mainfont: "Atkinson Hyperlegible"
+    code-copy: true
+    code-overflow: wrap
     toc: true
+
+freeze: auto
 
 editor: visual
 
