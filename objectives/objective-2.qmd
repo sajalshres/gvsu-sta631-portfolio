@@ -80,6 +80,12 @@ head(exam_scores) %>% kable()
 ```
 
 ```{r}
+str(exam_scores)
+```
+
+
+```{r}
 summary(exam_scores) %>% kable()
 ```
 
+The data looks clean. 
