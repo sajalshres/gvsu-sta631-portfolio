@@ -1,1 +1,10 @@
+---
+title: "Objective 5"
+---
+
+## Programming Statistical Models
+
+Course Objective:
+
+> Use programming software (i.e., R) to fit and assess statistical models
 

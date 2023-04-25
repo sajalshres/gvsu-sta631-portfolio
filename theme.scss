@@ -5,6 +5,10 @@
 $font-family: "Atkinson Hyperlegible", sans-serif;
 
 /*-- scss:rules --*/
+
+p {
+  text-align: justify;
+}
 #quarto-content>* {
     padding-top: 0;
 }

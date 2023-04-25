@@ -1,1 +1,10 @@
+---
+title: "Objective 4"
+---
+
+## Communicating results
+
+Course Objective:
+
+> Communicate the results of statistical models to a general audience
 

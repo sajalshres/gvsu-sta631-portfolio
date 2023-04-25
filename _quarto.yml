@@ -35,6 +35,7 @@ website:
       - text: Introduction
         href: index.qmd
       - section: "Course Objectives"
+        collapse: false
         contents:
         - href: "objectives/objective-1.qmd"
           text: 1. Statistical Modeling
@@ -46,10 +47,14 @@ website:
           text: 4. Communicating Results
         - href: "objectives/objective-5.qmd"
           text: 5. Programming Statistical Models
-      - section: "Artifacts"
+      - href: reflection.qmd
+        text: Self Reflection
+      - section: "Projects"
         contents:
-          - href: artifacts/project.qmd
-            text: Project
+          - href: projects/project.qmd
+            text: Recommendation System
+          - href: projects/world-happiness-report.qmd
+            text: World Happiness Report
       - text: About
         href: about.qmd
         
@@ -58,6 +63,7 @@ format:
   html:
     grid:
       sidebar-width: 350px
+      body-width: 900px
     theme:
       light: [cosmo, theme.scss]
       dark: [cosmo, theme-dark.scss]

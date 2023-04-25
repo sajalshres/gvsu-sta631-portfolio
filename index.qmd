@@ -1,11 +1,23 @@
 ---
-title: "Introduction"
+title: "Statistical Modeling and Regression Portfolio"
 ---
 
-This is a Quarto website.
+## Introduction
 
-To learn more about Quarto websites visit <https://quarto.org/docs/websites>.
+![](./assets/document-background.jpg){width="100%"}
 
-```{r}
-1 + 1
-```
+Hello, my name is Sajal Shrestha, and I am a data enthusiast passionate about statistical modeling and regression analysis. Through the STA 631 course, led by Dr. Bradford Dykes, I have sharpened my skills in using different regression techniques to explore data, draw meaningful insights, and solve real-world problems. Some of my areas of expertise include linear and logistic regression, time-series analysis, and regularization techniques. Thanks to the STA 518 course, I am proficient in R and have experience using essential libraries such as tidyverse and Shiny for data manipulation, visualization, and modeling. I also have experience in Python with essential libraries such as Pandas, NumPy, and Scikit-learn.
+
+This portfolio website showcases illustrations and projects documenting my ability to apply diverse regression techniques to various datasets, such as forecasting stock prices, identifying features, and predicting prices. I am committed to continuously learning and staying up-to-date with the latest trends in the field of data science. I am excited to share my knowledge and experiences with you and look forward to any opportunities to contribute or collaborate. You can find more about me on my [About](./about.html) page.
+
+In addition, I intend to demonstrate following objectives as part of the course:
+
+1.  Describe probability as a foundation of statistical modeling, including inference and maximum likelihood estimation
+
+2.  Determine and apply the appropriate generalized linear model for a specific data context
+
+3.  Conduct model selection for a set of candidate models
+
+4.  Communicate the results of statistical models to a general audience
+
+5.  Use programming software (i.e., R) to fit and assess statistical models

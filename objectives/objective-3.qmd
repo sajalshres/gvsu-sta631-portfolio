@@ -1,1 +1,9 @@
+---
+title: "Objective 3"
+---
 
+## Model Selection
+
+Course Objective:
+
+> Conduct model selection for a set of candidate models
