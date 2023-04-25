@@ -1,0 +1,4 @@
+- source: project
+  netlify:
+    - id: 696d22e2-5f34-4ae7-9b07-6434092089fb
+      url: 'https://sajal-sta631-portfolio.netlify.app'
