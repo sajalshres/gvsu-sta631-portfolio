@@ -1,0 +1,158 @@
+---
+title: "Mini Competition - Allendale Students"
+format: 
+  html:
+    code-fold: false
+    code-summary: "Show the code"
+    code-line-numbers: true
+---
+
+```{r import-lib, warning=FALSE, message=FALSE, echo=FALSE}
+library("knitr")
+library("kableExtra")
+library("tidyverse")
+library("tidymodels")
+library("GGally")
+library("psych")
+library("ggfortify")
+```
+
+## Introduction
+
+## Import Data
+
+```{r import-data, fig.align='center', warning=FALSE, message=FALSE}
+allendale_students <- readr::read_csv("../data/allendale-students.csv")
+```
+
+```{r}
+head(allendale_students) %>%
+  knitr::kable()
+```
+
+```{r}
+summary(allendale_students) %>% kable()
+```
+
+```{r}
+psych::pairs.panels(
+  allendale_students,
+  hist.col = "#00AFBB",
+  method= "pearson",
+  density = TRUE,
+  ellipses = TRUE
+)
+```
+
+From the above visualization, we can observe that the observations in distance and scholarship variables are skewed towards right. Also, we can observe that the variable debt has some correlation with distance, scholarship and parents variables.
+
+## Single Linear Regression
+
+```{r results = "asis"}
+for (x in c("distance", "scholarship", "parents", "car", "housing")) {
+  m <- lm(paste("debt", "~", x), data = allendale_students)
+  print(tidy(m) %>% kable(caption = paste("formula: debt", "~", x)))
+
+}
+```
+
+## Multiple Linear Regression
+
+Fit the multiple linear regression with debt as dependent variables and distance, scholarship and parents as independent variables.
+
+```{r mlr}
+m_mlr_dsp <- lm(debt ~ distance + scholarship + parents , data = allendale_students)
+tidy(m_mlr_dsp) %>% kable()
+```
+
+Access model fit using `glance`:
+
+```{r mlr-glance}
+glance(m_mlr_dsp) %>% kable()
+```
+
+Now, lets access the model diagnostics using the `ggplot2::autoplot` function.
+
+```{r, fig.align='center', fig.height=8, fig.width=10, warning=FALSE, message=FALSE}
+ggplot2::autoplot(m_mlr_dsp)
+```
+
+In the above diagnostics plot, we can observe that observation 11 is clearly an outlier. Lets use `broom::augment` to further analyze the outlier.
+
+```{r}
+# https://broom.tidymodels.org/reference/augment.lm.html
+augment_allendale_students <- broom::augment(m_mlr_dsp, data=allendale_students)
+```
+
+Looking into `augment_allendale_students` variable, it looks like observation `11` is clearly an outlier. lets remove it from the data:
+
+```{r}
+data <- allendale_students %>%
+  filter(!row_number() %in% c(11))
+```
+
+Now, lets fit the multiple linear regression again:
+
+```{r}
+m_mlr_dsp <- lm(debt ~ distance + scholarship + parents , data = data)
+tidy(m_mlr_dsp) %>% kable()
+```
+
+```{r}
+glance(m_mlr_dsp) %>% kable()
+```
+
+We can observed imporved model after removing the outlier. Now lets try to fit the MLR with different interation:
+
+```{r}
+m_mlr_1 <- lm(debt ~ distance * car + scholarship + parents, data = data)
+glance(m_mlr_1) %>% kable()
+```
+
+```{r}
+m_mlr_2 <- lm(debt ~ distance * scholarship * parents * housing, data = data)
+glance(m_mlr_2) %>% kable()
+```
+
+```{r}
+
+data = data %>%
+  mutate(sqrt_scholarship = sqrt(scholarship))
+
+
+m_mlr_3 <- lm(debt ~ distance * scholarship * parents * major, data = data)
+tidy(m_mlr_3)
+glance(m_mlr_3) %>% kable()
+```
+
+The model `m_mlr_3` seems to be the best fit.
+
+Next, let investigate if performing normalization can boost our model:
+
+```{r}
+norm_data <- data %>%
+  mutate(log_distance = log(distance)) %>%
+  mutate(log_scholarship = log(scholarship))
+
+# Remove inf values
+norm_data$log_distance[is.infinite(norm_data$log_distance)] <- 0
+norm_data$log_scholarship[is.infinite(norm_data$log_scholarship)] <- 0
+
+# fit model
+m_mlr_4 <- lm(debt ~ log_distance + scholarship + parents, data = norm_data)
+glance(m_mlr_4) %>% kable()
+```
+
+No improvements, The model `m_mlr_3` produces better result.
+
+Now lets perform some model diagnostics for model `m_mlr_3`:
+
+```{r,fig.align='center', fig.height=8, fig.width=10, warning=FALSE, message=FALSE}
+ggplot2::autoplot(m_mlr_3)
+```
+
+## Test for Collinearity
+
+```{r test-collieanarity, warning=FALSE, message=FALSE}
+car::vif(m_mlr_3)
+```

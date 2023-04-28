@@ -8,3 +8,4 @@ Course Objective:
 
 > Use programming software (i.e., R) to fit and assess statistical models
 
+In the above models and illustrations, I used various R packages to fit and assess statistical models. Specifically, I used `lm()` to fit simple and linear regression models. I used the `glm()` function for generalized linear modeling, and `rpart` for decision tree analysis, `svm` for support vector machines, and `nn` for building neural networks. To assess the statistical models, I used functions such as `glance()` and `summary()` to determine goodness of fit and statistical significance. Additionally, I used the `predict()` function to make predictions on test data. Finally, I performed stepwise selection using the `step()` function and cross-validation using the `caret` package.

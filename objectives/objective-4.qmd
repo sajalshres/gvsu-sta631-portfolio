@@ -2,9 +2,97 @@
 title: "Objective 4"
 ---
 
-## Communicating results
+## 4 Communicating results
 
 Course Objective:
 
 > Communicate the results of statistical models to a general audience
 
+```{r import-lib, warning=FALSE, message=FALSE, echo=FALSE}
+library("knitr")
+library("kableExtra")
+library("tidyverse")
+library("tidymodels")
+library("GGally")
+library("psych")
+library("ggfortify")
+```
+
+## 4.1 Introduction
+
+To communicate the results of a statistical model to a non-technical or a general audience, It is vital to simplify the results and generate easy to understand summary and data visualization. It is crucial to keep the message clear, concise, and easy to understand. As a rule of thumb, I've found that below steps works well:
+
+1.  State the purpose: By clearly stating the objective of the analysis and key questions(s) to answer, we can help the target audience understand the context and importance of finding.
+
+2.  Simple language: Always avoid complex technical jargon and statistical terminologies. We should use plain language to convey the findings.
+
+3.  Summarize findings: Clearly state the results of the analysis, emphasizing important and interesting insights.
+
+4.  Visualize data: Using graphs or other similar visual aids can help reach message to audience. It make information readily available and easier to digest.
+
+5.  Show limitations: Understand and acknowledge any limitations or uncertainties associated with the analysis, and provide context on how they might affect the results.
+
+## 4.2 Example
+
+To illustrate, I will use the popular `mtcars` dataset that ships with base R. This dataset contains data about various car models that we can use to perform a simple linear regression. To predict the miles per gallon (mpg) based on the car's weight (wt) and horsepower (hp), I will use the `lm()` function.
+
+Below is an example on how to communicate the results to a general audience:
+
+```{r}
+# Load the necessary libraries
+library(ggplot2)
+
+# Load the data
+data(mtcars)
+
+# Fit the linear model
+model <- lm(mpg ~ wt + hp, data = mtcars)
+```
+
+### 4.2.1 Report
+
+I would like to share the results of a linear regression analysis we conducted using the `mtcars` dataset. Our primary goal was to understand how a car's weight and horsepower affect its fuel efficiency, measured in miles per gallon.
+
+To achieve this objective, we fitted a linear regression model that uses weight and horsepower as independent variables to predict miles per gallon. Below is a summary of our findings:
+
+1.  Weight: Our findings suggest that there is a negative relationship between a car's weight and its fuel efficiency. This means that as a car's weight increases, its miles per gallon tends to decrease. Heavier cars generally consume more fuel than lighter ones.
+2.  Horsepower: We found that horsepower also has a negative relationship with fuel efficiency. As horsepower increases, miles per gallon decreases. This suggests that cars with higher horsepower generally have lower fuel efficiency.
+
+```{r}
+# Display the summary of the model
+summary(model)
+```
+
+Our linear regression analysis revealed the following key statistical results:
+
+1.  Coefficients: The model's coefficients indicate the average change in the dependent variable (mpg) for a one-unit change in the independent variables (wt and hp), holding all other variables constant. Our coefficients are:
+
+    -   Intercept: 37.2273
+    -   Weight (wt): -3.8778
+    -   Horsepower (hp): -0.0318
+
+    This means that, on average, an increase in weight by 1,000 lbs is associated with a decrease in mpg by 3.8778 units, and an increase in horsepower by 1 unit is associated with a decrease in mpg by 0.0318 units.
+
+2.  Multiple R-squared: This statistic represents the proportion of variation in the dependent variable (mpg) that is explained by the independent variables (wt and hp). Our Multiple R-squared value is 0.8268, meaning that our model explains 82.68% of the variation in mpg.
+
+3.  F-statistic: The F-statistic is used to test the overall significance of the model, i.e., whether the independent variables (wt and hp) have a significant impact on the dependent variable (mpg). Our F-statistic is 70.91, with a very low p-value (\< 0.0001). This indicates that our model is statistically significant, and the independent variables have a meaningful impact on mpg.
+
+4.  Residual standard error: This statistic measures the average deviation of the observed values from the predicted values. Our residual standard error is 2.639, meaning that, on average, our model's predictions deviate from the actual mpg values by 2.639 units.
+
+To help visualize these relationships, we have included a visualization that demonstrates the actual data points, along with the fitted regression lines for each variable.
+
+```{r warning=FALSE, message=FALSE}
+ggplot(mtcars, aes(x = wt, y = mpg, color = hp)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    title = "Miles per Gallon vs. Weight and Horsepower",
+    x = "Weight (1000 lbs)",
+    y = "Miles per Gallon",
+    color = "Horsepower"
+  )
+```
+
+As shown in the graph above, there is a clear negative correlation between weight, horsepower, and miles per gallon. The data indicate that cars with lower weight and horsepower generally have better fuel efficiency.
+
+In summary, our analysis reveals that both weight and horsepower significantly influence a car's fuel efficiency. This information can be helpful for consumers when considering which car to purchase, as well as for car manufacturers looking to design more fuel-efficient vehicles.

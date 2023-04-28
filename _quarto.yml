@@ -53,8 +53,9 @@ website:
         contents:
           - href: projects/project.qmd
             text: Recommendation System
-          - href: projects/world-happiness-report.qmd
-            text: World Happiness Report
+          - href: projects/mini-competition.qmd
+            text: 'Mini Competition - Students'
+          
       - text: About
         href: about.qmd
         

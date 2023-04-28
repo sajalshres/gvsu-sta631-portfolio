@@ -1,5 +1,0 @@
----
-title: "World Happiness Report"
----
-
-## TODO: ADD here

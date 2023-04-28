@@ -10,7 +10,7 @@ Course Objective:
 
 Probability is a fundamental concept in statistical modeling, providing a quantitative measure of the likelihood of an event occurring within a given set of possible outcomes. It plays a vital roles in various aspects of statistics, including inference and maximum likelihood estimation.
 
-Some basic examples to illustrate probability distributions, statistical modeling, inference, and maximul likelihood estimations includes:
+Some basic examples to illustrate probability distributions, statistical modeling, inference, and maximum likelihood estimations includes:
 
 ### 1. Probabitlity Distributions
 

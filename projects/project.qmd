@@ -1,1 +1,16 @@
+---
+title: "Project - RecommendMeMovies"
+format: 
+  html:
+    code-fold: false
+    code-summary: "Show the code"
+    code-line-numbers: true
+---
 
+## Introduction
+
+This project aims to create a recommendation engine for online streaming platforms like Amazon Prime Videos, Netflix, Disney, and Hulu. The goal is to understand how these platforms generate recommendations and implement a recommendation engine. Accurate recommendations for movies or series are crucial for a platform's success.
+
+To achieve this, a linear regression analysis will be performed to build a model and generate predictions. Various regression models will also be explored and their performance will be compared.
+
+Link: [recommendmemovies.sajalshres.com/](https://recommendmemovies.sajalshres.com/)

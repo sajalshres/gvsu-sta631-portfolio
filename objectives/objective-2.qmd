@@ -22,6 +22,9 @@ library("tidymodels")
 library("GGally")
 library("psych")
 library("ggfortify")
+library("corrplot")
+library("caTools")
+library("ROCR")
 ```
 
 ### 2.1.1 Dataset
@@ -66,26 +69,208 @@ print(predicted_outcome)
 
 The `predicted_outcome` is 1, which indicates that the new student will pass the exam. If the `predicted_outcome` is 0, then model predicts failure.
 
-### 2.2 Mini Project - Student Exam Scores
+## 2.2 Mini Project - Student Exam Scores
 
-Data Source: [http://roycekimmons.com/tools/generated_data/exams](http://roycekimmons.com/tools/generated_data/exams)
+Data Source: <http://roycekimmons.com/tools/generated_data/exams>
+
+### 2.2.1 Data Preparation
 
 ```{r}
-# load data
-exam_scores <- read.csv("../data/exam_scores.csv", stringsAsFactors = T)
+# load the data and make strings as factors
+exam_scores <-
+  as_tibble(read.csv("../data/exam_scores.csv", stringsAsFactors = T))
+
+exam_scores <-
+  exam_scores %>% dplyr::rename(
+    "ethnicity" = "race.ethnicity",
+    "parental_education" = "parental.level.of.education",
+    "test_preparation_course" = "test.preparation.course",
+    "math_score" = "math.score",
+    "reading_score" = "reading.score",
+    "writing_score" = "writing.score"
+  )
 ```
 
 ```{r}
 head(exam_scores) %>% kable()
 ```
 
+Inspect the variables:
+
 ```{r}
 str(exam_scores)
 ```
 
+Summary statistics"
 
 ```{r}
 summary(exam_scores) %>% kable()
 ```
 
-The data looks clean. 
+The data appears to be clean, as I did not observe any missing values, outliers, or NAs. Therefore, let's prepare the data to perform logistic regression models.
+
+In below steps, I am adding additional diagnostics: .
+
+```{r}
+exam_scores <- exam_scores %>%
+  rowwise() %>%
+  mutate(average_score = mean(reading_score, writing_score, math_score))
+
+exam_scores$good_student <-
+  ifelse(exam_scores$average_score > mean(exam_scores$average_score),
+         1,
+         0)
+```
+
+Add further variables for gender, ethnicity, parental eduction, lunch types and test preb
+
+```{r}
+exam_scores$is_male <- ifelse(exam_scores$gender == "male", 1, 0)
+exam_scores$is_female <-
+  ifelse(exam_scores$gender == "female", 1, 0)
+
+exam_scores$ethnicity_A <-
+  ifelse(exam_scores$ethnicity == "group A", 1, 0)
+exam_scores$ethnicity_B <-
+  ifelse(exam_scores$ethnicity == "group B", 1, 0)
+exam_scores$ethnicity_C <-
+  ifelse(exam_scores$ethnicity == "group C", 1, 0)
+exam_scores$ethnicity_D <-
+  ifelse(exam_scores$ethnicity == "group D", 1, 0)
+exam_scores$ethnicity_E <-
+  ifelse(exam_scores$ethnicity == "group E", 1, 0)
+
+exam_scores$parents_edu_associate <-
+  ifelse(exam_scores$parental_education
+         == "associate's degree",
+         1,
+         0)
+exam_scores$parents_edu_bachelor <-
+  ifelse(exam_scores$parental_education
+         == "bachelor's degree",
+         1,
+         0)
+exam_scores$parents_edu_hschool <-
+  ifelse(
+    exam_scores$parental_education
+    == "high school" |
+      exam_scores$parental_education ==
+      "some high school",
+    1,
+    0
+  )
+exam_scores$parents_edu_masters <-
+  ifelse(exam_scores$parental_education
+         == "master's degree",
+         1,
+         0)
+exam_scores$parents_edu_college <-
+  ifelse(exam_scores$parental_education
+         == "some college", 1, 0)
+
+exam_scores$standard_lunch <-
+  ifelse(exam_scores$lunch == "standard", 1, 0)
+exam_scores$subsidised_lunch <-
+  ifelse(exam_scores$lunch == "free/reduced", 1, 0)
+
+exam_scores$test_prep_complete <-
+  ifelse(exam_scores$test_preparation_course == "completed"
+         , 1, 0)
+head(exam_scores) %>% kable()
+```
+
+We can clean categorical variables as we have added diagnostic variable to build our model/
+
+```{r}
+data <- subset(
+  exam_scores,
+  select = -c(
+    gender,
+    ethnicity,
+    parental_education,
+    lunch,
+    test_preparation_course
+  )
+)
+
+data <- data[, c(6:20, 1:5)]
+```
+
+```{r}
+#Corelation Analysis
+
+cr <- cor(data)
+corrplot(cr)
+```
+
+Now, lets do a forward regression and check significance of each variable as we continue adding to our model:
+
+```{r}
+split <- caTools::sample.split(data$good_student, SplitRatio = 0.8)
+train_set <-subset(data, split == "TRUE")
+test_set <- subset(data, split == "FALSE")
+```
+
+### 2.2.2 Logistic Regression Models
+
+```{r}
+model_low <- glm(good_student ~ test_prep_complete,
+                 data = train_set,
+                 family = binomial)
+```
+
+Using `step` function, I will perform stepwise selection using AIC:
+
+```{r}
+model_bestfit <-
+  stats::step(
+    model_low,
+    scope = list(
+      lower = good_student ~ test_prep_complete,
+      upper = good_student ~ test_prep_complete + standard_lunch +
+        is_female + parents_edu_masters + parents_edu_bachelor + ethnicity_E
+    ),
+    direction = "both"
+  )
+
+```
+
+Lets examine the final best fit model:
+
+```{r}
+summary(model_bestfit)
+```
+
+The above summary statistics are for the final model selected based on the lowest AIC value.
+
+### ROC Curve
+
+```{r}
+res <- predict(model_bestfit, train_set, type = "response")
+rocr_pred <- ROCR::prediction(res, train_set$good_student)
+rocr_perf <- ROCR::performance(rocr_pred, "tpr", "fpr")
+```
+
+```{r}
+plot(rocr_perf,colorize=FALSE, print.cutoffs.at=seq(0.2, by=0.3))
+```
+
+```{r}
+confusion_matrix <- table(actual = train_set$good_student,
+                          predicted = res > 0.55)
+accuracy <-
+  (confusion_matrix[2, 2] + confusion_matrix[1, 1]) / (confusion_matrix[2, 2] + confusion_matrix[2, 1] + confusion_matrix[1, 1] + confusion_matrix[1, 2])
+accuracy
+```
+
+```{r}
+test_set$good_student <- as.factor(test_set$good_student)
+
+res <- predict(model_bestfit, test_set, type = "response")
+
+rocr_pred <- ROCR::prediction(res, test_set$good_student)
+rocr_perf <- ROCR::performance(rocr_pred, "tpr", "fpr")
+plot(rocr_perf,
+     colorize = FALSE,
+     print.cutoffs.at = seq(0.2, by = 0.3))
+```

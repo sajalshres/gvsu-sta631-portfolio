@@ -4,7 +4,7 @@ title: "Statistical Modeling and Regression Portfolio"
 
 ## Introduction
 
-![](./assets/document-background.jpg){width="100%"}
+![](./assets/flower-background.jpg){width="100%"}
 
 Hello, my name is Sajal Shrestha, and I am a data enthusiast passionate about statistical modeling and regression analysis. Through the STA 631 course, led by Dr. Bradford Dykes, I have sharpened my skills in using different regression techniques to explore data, draw meaningful insights, and solve real-world problems. Some of my areas of expertise include linear and logistic regression, time-series analysis, and regularization techniques. Thanks to the STA 518 course, I am proficient in R and have experience using essential libraries such as tidyverse and Shiny for data manipulation, visualization, and modeling. I also have experience in Python with essential libraries such as Pandas, NumPy, and Scikit-learn.
 
@@ -12,12 +12,14 @@ This portfolio website showcases illustrations and projects documenting my abili
 
 In addition, I intend to demonstrate following objectives as part of the course:
 
-1.  Describe probability as a foundation of statistical modeling, including inference and maximum likelihood estimation
+1.  [Describe probability as a foundation of statistical modeling, including inference an3d maximum likelihood estimation](./objectives/objective-1.html)
 
-2.  Determine and apply the appropriate generalized linear model for a specific data context
+2.  [Determine and apply the appropriate generalized linear model for a specific data context](objectives/objective-2.html)
 
-3.  Conduct model selection for a set of candidate models
+3.  [Conduct model selection for a set of candidate models](objectives/objective-3.html)
 
-4.  Communicate the results of statistical models to a general audience
+4.  [Communicate the results of statistical models to a general audience](objectives/objective-4.html)
 
-5.  Use programming software (i.e., R) to fit and assess statistical models
+5.  [Use programming software (i.e., R) to fit and assess statistical models](objectives/objective-5.html)
+
+You can find examples or demonstrations for each of the objectives above in the **"Course Objective"** section of the left navigation. Additionally, please visit the ["Self Reflection"](./reflection.html) page to review my key results and findings.

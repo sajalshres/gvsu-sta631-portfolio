@@ -2,4 +2,652 @@
 title: "Self Reflection"
 ---
 
-## TODO: Add self reflection
+```{r}
+source("utils.R")
+```
+
+```{r import-lib, warning=FALSE, message=FALSE, echo=FALSE}
+library("knitr")
+library("kableExtra")
+library("tidyverse")
+library("tidymodels")
+library("GGally")
+library("psych")
+library("ggfortify")
+library("corrplot")
+library("caTools")
+library("ROCR")
+library("ggpubr")
+library("Metrics")
+library("rpart")
+library("rpart.plot")
+library("e1071")
+library("neuralnet")
+```
+
+## 1. Describe probability as a foundation of statistical modeling, including inference and maximum likelihood estimation
+
+Probability is a fundamental concept in statistical modeling, providing a quantitative measure of the likelihood of an event occurring within a given set of possible outcomes. It plays a vital roles in various aspects of statistics, including inference and maximum likelihood estimation. Furthermore, probability is used to introduce variability and randomness in data which allows to make predictions, add generalization and make decision based on uncertain information.
+
+Some basic examples to illustrate probability distributions, statistical modeling, inference, and maximum likelihood estimations includes:
+
+### 1.1. Probabitlity Distributions
+
+```{r probability-distributions}
+set.seed(631)
+# Uniform distribution
+min <- 0 # lower limit
+max <- 1 # upper limit
+
+# Generate 1000 random numbers from a uniform distribution
+x <- runif(1000, min = min, max = max)
+```
+
+The above code generates the 1000 random numbers from a uniform distribution. Likewise, we can also generate for poisson distributiuon. I will use `rpois` library to demonstrate:
+
+```{r}
+# Generate random Poisson data
+set.seed(631)
+
+# Parameters
+lambda <- 4 # average rate of events per interval
+data <- rpois(100, lambda)
+
+# Plot the histogram
+hist(data, main="Poisson Distribution", xlab="Number of Events", col="orange", border="black", freq=FALSE)
+
+# Overlay the theoretical Poisson probability mass function
+x <- 0:max(data)
+pmf <- dpois(x, lambda)
+points(x, pmf, col="blue", type="h", lwd=2)
+```
+
+### 1.2. Statistical Modeling - Linear Regression
+
+Linear regression is one of the most widely used statistical models because it can be easily interpreted by almost everyone. The model analyzes the relationship between a response variable (y) and one or more variables, including their interactions. We can perform simple or multiple linear regression. Simple linear regression uses one independent variable, whereas multiple linear regression uses two or more independent variables. The primary goal is to identify the line of best fit through the data by searching for the value of the regression coefficient that minimizes the total error of the model.
+
+To perform linear regression in R, I'll use `lm()` function to fit the linear model by minimizing the residual sum of squares.
+
+```{r statistical-modeling}
+set.seed(631)
+
+# Sample data
+student.study_hours <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+student.exam_scores <- c(30, 35, 50, 60, 62, 70, 75, 80, 90, 95)
+
+# Perform linear regression
+model <- lm(student.exam_scores ~ student.study_hours)
+
+# Display the model summary
+summary(model)
+```
+
+```{r}
+# Visualize the data
+plot(student.study_hours, student.exam_scores, main="Hours Studied vs Exam Score", xlab="Hours Studied", ylab="Exam Score")
+# Add the regression line to the plot
+abline(model, col="chocolate1", lwd=2)
+```
+
+The above code demonstrates a single linear regression using a simulated dataset that shows the relationship between hours studied and exam scores, represented by the formula `student.exam_scores ~ student.study_hours`. The `summary(model)` function provides summary statistics, including parameter estimates, standard errors, t-values, and p-values for hypothesis testing.
+
+Now, lets perform a multiple linear regression
+
+```{r warning=FALSE, message=FALSE}
+allendale_students <- get_allendale_students_data()
+
+allendale_students = allendale_students %>%
+  mutate(sqrt_scholarship = sqrt(scholarship))
+
+
+model_mlr <- lm(debt ~ distance + scholarship + parents, data = allendale_students)
+glance(model_mlr) %>% kable()
+```
+
+In the above code, we fit the multiple linear regression model with two predictor variable with interaction. The r-square value of `0.7927422` indicates good performance.
+
+*Note*: Please visit [Mini Competition - Students Page](./projects/mini-competition.html) to view in-depth analysis of proposed model.
+
+### 1.3. Inference - Confidence Interval and Hypothesis Testing:
+
+In the context of inference, we can use probability to draw conclusions about an underlying population based on a sample of data. The code below demonstrates statistical inference with a 95% confidence interval and hypothesis testing.
+
+```{r}
+# Confidence interval
+conf_int <- confint(model, level = 0.95)  # 95% confidence interval for model parameters
+print(conf_int)
+
+# Hypothesis testing (t-test)
+t_test <- summary(model)$coefficients  # t-test results for model coefficients
+print(t_test)
+```
+
+### 1.4. Maximum Likelihood Estimation - Logistic Regression:
+
+The Maximum Likelihood Estimation(MLE) is a method used for estimating the parameters of a statistical model by maximizing the likelihood of the observed data. The likelihood is a function of models parameter and represent the probability of observing the given data under the assumed model. Further, it is a set of parameter values that maximizes the likelihood, making observed data most probable. In addition, MLE relies on probability distribution of data to follow specific distribution such as Poisson, Gaussian, etc.
+
+```{r}
+# Simulate data
+set.seed(42)
+x <- rnorm(100)
+z <- 1 + 2 * x
+prob <- 1 / (1 + exp(-z))
+y <- rbinom(100, size = 1, prob = prob)  # binary response variable
+
+# Fit logistic regression model using maximum likelihood estimation
+model <- glm(y ~ x, family = binomial(link = "logit"))
+
+# Model summary
+summary(model)
+```
+
+In the above sample code, we performed a generalized linear model using the binomial distribution. This was done to illustrate the probability distribution, model the relationships between the variables, and estimate the parameters using maximum likelihood estimation. We'll further explore the generalized linear model in next objective.
+
+### 1.5 Conclusion
+
+In conclusion, I believe that probability serves as the foundation of any statistical modeling. It allows us to quantify uncertainty, make predictions, and infer population parameters from sample data. Inference and maximum likelihood estimation are vital statistical methods that rely on probability to make sense of variability and randomness in sample data.
+
+## 2. Determine and apply the appropriate generalized linear model for a specific data context
+
+Logistic regression is a statistical method used to analyze a dataset where the dependent variable (outcome) is binary. This method estimates the probability of an event occurring based on one or more predictor variables. Logistic regression is similar to the linear regression model but uses the logistic function to model the relationship between the predictors and the binary outcome.
+
+Generalized Linear Models (GLMs) provide a flexible way to model data when the relationship between predictor and response variables is not necessarily linear. In R, the `stats:glm()` function is widely used to fit GLMs.
+
+Let's apply GLMs to several sample datasets and explore the results.
+
+### 2.1 Example using small student dataset
+
+I will demonstrate the General Linear Model (GLM) using a simulated dataset for students. Later, I will proceed with more complicated datasets.
+
+#### 2.1.2 Prepare data
+
+```{r}
+# Create the dataset
+students <- data.frame(
+  student_id = 1:5,
+  study_hours = c(10, 4, 8, 2, 6),
+  attendance_rate = c(80, 60, 90, 40, 95),
+  pass = c(1, 0, 1, 0, 1)
+)
+
+# Inspect the dataset
+head(students) %>% kable()
+```
+
+In the above example, I've generated a simple data for students exam data that has id, study_hours, attendance_rate and pass variables.
+
+#### 2.1.3 Generate Model
+
+Here, I'll assume that you want to predict if the student will pass the exam based on study hours, and attendance rate. I am using `binomial` family of distribution as the pass variable is binary in nature.
+
+```{r, results='asis'}
+# Fit the logistic regression model using glm()
+logit_model <-
+  glm(pass ~ study_hours + attendance_rate,
+      data = students,
+      family = "binomial")
+
+
+tidy(logit_model) %>% kable()
+```
+
+#### 2.1.4 Predict
+
+Next, I'll predict the probability of a new student passing with 7 hours of study and an 85% attendance rate.
+
+```{r}
+new_student <- data.frame(study_hours = 7, attendance_rate = 85)
+
+predicted_probability <- predict(logit_model, newdata = new_student, type = "response")
+
+print(predicted_probability)
+```
+
+```{r}
+threshold <- 0.5
+predicted_outcome <- ifelse(predicted_probability >= threshold, 1, 0)
+print(predicted_outcome)
+```
+
+The `predicted_outcome` is 1, which indicates that the new student will pass the exam. If the `predicted_outcome` is 0, then model predicts failure.
+
+### 2.2 Mini Project Example - Student Exam Scores
+
+Data Source: <http://roycekimmons.com/tools/generated_data/exams>
+
+Lets further explore the genarlized linear models(GLM) with slightly more complicated example. For demonstration, I have simplified the data preparation step by creating a function `get_student_exam_scores_data()`. You can find the details step for Student Exam Scores mini project in [Generalized Linear Modeling](./objectives/objective-2.html) page.
+
+#### 2.2.1 Prepare Data
+
+Lets load the prepared data using `get_student_exam_scores_data()` from `utils.R` module.
+
+```{r}
+data <- get_student_exam_scores_data()
+```
+
+Splitting datasets into training and testing:
+
+```{r}
+split <- caTools::sample.split(data$good_student, SplitRatio = 0.7)
+train_set <-subset(data, split == "TRUE")
+test_set <- subset(data, split == "FALSE")
+```
+
+#### 2.2.2 Model 1
+
+The model 1 is simple where we are trying to predict if the student is good based on the `TestPrepComplete` variable.
+
+```{r}
+model1 <- glm(good_student ~ test_prep_complete,
+          data = train_set,
+          family = binomial)
+summary(model1)
+```
+
+#### 2.2.3 Model 2
+
+For model 2, I am predicting if the student is good based on several variables:
+
+```{r}
+model2 <- glm(
+  good_student ~ test_prep_complete + standard_lunch +
+    is_female + parents_edu_masters + parents_edu_bachelor
+  + ethnicity_E,
+  data = train_set,
+  family = binomial
+)
+summary(model2)
+```
+
+In the above two models, model no.2 has the least AIC and deviance value. In [Generalized Linear Modeling](./objectives/objective-2.html) page, I've built seven models.
+
+#### 2.2.4 ROC Curve
+
+```{r}
+res <- predict(model2, train_set, type = "response")
+
+
+#ROCR Curve
+
+rocr_pred <- ROCR::prediction(res, train_set$good_student)
+rocr_perf <- ROCR::performance(rocr_pred, "tpr", "fpr")
+plot(rocr_perf,colorize=FALSE, print.cutoffs.at=seq(0.2, by=0.3))
+```
+
+```{r}
+confusion_matrix <- table(actual = train_set$good_student,
+                          predicted = res > 0.55)
+accuracy <-
+  (confusion_matrix[2, 2] + confusion_matrix[1, 1]) / (confusion_matrix[2, 2] + confusion_matrix[2, 1] + confusion_matrix[1, 1] + confusion_matrix[1, 2])
+accuracy
+```
+
+```{r}
+test_set$good_student <- as.factor(test_set$good_student)
+
+res <- predict(model2, test_set, type = "response")
+
+rocr_pred <- ROCR::prediction(res, test_set$good_student)
+rocr_perf <- ROCR::performance(rocr_pred, "tpr", "fpr")
+plot(rocr_perf,
+     colorize = FALSE,
+     print.cutoffs.at = seq(0.2, by = 0.3))
+```
+
+### 2.3 Conclusion
+
+I have explored the Generalized Linear Model (GLM) in R using the `glm()` function. I found that the `glm()` function works similarly to the `lm()` function in terms of syntax. However, Generalized Linear Models can have non-normal errors or distributions.
+
+Logistic regression can be conducted to predict a binary outcome from a set of continuous predictor variables. I observed that it is frequently preferred over discriminant function analysis as it is less restrictive. To predict outcome variables that represent counts from a set of continuous predictor variables, Poisson regression is useful.
+
+For this purpose, I performed generalized linear modeling on a simple dataset and a moderately complex student dataset. Additionally, we can use the `glance()` and `summary()` functions to investigate statistics such as coefficients, estimated standard errors, p-values, and so on.
+
+## 3. Conduct model selection for a set of candidate models
+
+In real-world scenarios, data scientists and statisticians develop multiple models, and even better, hybrid models, to solve complex problems and assess the overall performance of the system. Selecting the right candidate model is highly crucial and involves using various techniques that best describe the relationship between the response and predictor variables. Some techniques to select a model include:
+
+1.  Inspect summary statistics and performance of different models.
+2.  Subset(Stepwise) Selection
+3.  Cross-validation
+4.  Dimension Reduction.
+
+To illustrate model selection strategies, I will use top three methods mentioned above to perform model selection.
+
+### 3.1. Inspect summary statistics and performance of different models.
+
+#### 3.1.1 Prepare Data
+
+I'll use `get_happiness_data()` from `utils.R` module to load the pre-processed data. Please visit [Model Selection](./objectives/objective-3.html) page to find in-depth details of data processing and analysis.
+
+```{r}
+dataset <- get_happiness_data()[4:11]
+split = sample.split(dataset$Happiness.Score, SplitRatio = 0.8)
+training_set = subset(dataset, split == TRUE)
+test_set = subset(dataset, split == FALSE)
+```
+
+#### 3.1.2 Build Multiple Models
+
+Lets build four models to illustrate the model selection:
+
+```         
+1. Multiple Linear Regression
+2. Support Vector Machines
+3. Decision Tree
+4. Neural Network
+```
+
+#### 3.1.2.1 Multiple Linear Regression
+
+Below, I am building a multiple linear model to predict the happiness score against various variables.
+
+```{r}
+model_lm = lm(formula = Happiness.Score ~ .,
+              data = training_set)
+
+y_pred_lm = predict(model_lm, newdata = test_set)
+pred_actual_lm <-
+  as.data.frame(cbind(Prediction = y_pred_lm, Actual = test_set$Happiness.Score))
+plot_lm <- ggplot(pred_actual_lm, aes(Actual, Prediction)) +
+  geom_point() + theme_bw() + geom_abline() +
+  labs(title = "Multiple Linear Regression", x = "Actual Score",
+       y = "Predicted Score") +
+  theme(plot.title = element_text(size = (10)),
+        axis.title = element_text(size = (8)))
+
+summary(model_lm)
+```
+
+#### 3.1.2.2 Support Vector Machines
+
+```{r warning=FALSE, message=FALSE}
+model_svm = e1071::svm(
+  formula = Happiness.Score ~ .,
+  data = dataset,
+  type = 'eps-regression',
+  kernel = 'radial'
+)
+y_pred_svm = predict(model_svm,  newdata = test_set)
+pred_actual_svm <- as.data.frame(cbind(Prediction = y_pred_svm, Actual = test_set$Happiness.Score))
+pred_actual_svm.versus.svm <- cbind(Prediction.lm = y_pred_lm, Prediction.svm = y_pred_svm, Actual = test_set$Happiness.Score)
+
+plot_svm <- ggplot(pred_actual_svm, aes(Actual, Prediction )) +
+  geom_point() + theme_bw() + geom_abline() +
+  labs(title = "SVM", x = "Actual Score",
+       y = "Predicted Score") +
+  theme(plot.title = element_text(size = (10)), 
+        axis.title = element_text(size = (8)))
+
+summary(model_svm)
+```
+
+#### 3.1.2.3 Decision Tree
+
+```{r warning=FALSE, message=FALSE}
+
+model_dt = rpart::rpart(formula = Happiness.Score ~ .,
+                 data = dataset,
+                 control = rpart::rpart.control(minsplit = 10))
+
+y_pred_dt = predict(model_dt, newdata = test_set)
+
+pred_actual_dt <-
+  as.data.frame(cbind(Prediction = y_pred_dt, Actual = test_set$Happiness.Score))
+
+
+plot_dt <- ggplot(pred_actual_dt, aes(Actual, Prediction)) +
+  geom_point() + theme_bw() + geom_abline() +
+  labs(title = "Decision Tree", x = "Actual Score",
+       y = "Predicted Score") +
+  theme(plot.title = element_text(size = (10)),
+        axis.title = element_text(size = (8)))
+```
+
+```{r warning=FALSE, message=FALSE, echo=FALSE}
+dataset <- get_happiness_data()[4:11]
+split = sample.split(dataset$Happiness.Score, SplitRatio = 0.8)
+training_set = subset(dataset, split == TRUE)
+test_set = subset(dataset, split == FALSE)
+```
+
+#### 3.1.2.4 Neural Networks
+
+```{r}
+model_nn <-
+  neuralnet::neuralnet(
+    Happiness.Score ~ Economy + Family + Life.Expectancy + Freedom + Generosity + Trust + Dystopia.Residual,
+    data = training_set,
+    hidden = 10,
+    linear.output = TRUE
+  )
+
+predicted.nn.values <- compute(model_nn, test_set[, 2:8])
+
+pred_actual_nn <-
+  as.data.frame(
+    cbind(
+      Prediction = predicted.nn.values$net.result,
+      Actual = test_set$Happiness.Score
+    )
+  )
+
+plot_nn <- ggplot(pred_actual_nn, aes(Actual, V1)) +
+  geom_point() + theme_bw() + geom_abline() +
+  labs(title = "Neural Network", x = "Actual Score",
+       y = "Predicted Score") +
+  theme(plot.title = element_text(size = (10)),
+        axis.title = element_text(size = (8)))
+```
+
+#### 3.1.3 Model Selection
+
+```{r warning=FALSE, message=FALSE, echo=FALSE}
+pred_actual_lm<- na.omit(pred_actual_lm)
+pred_actual_nn<- na.omit(pred_actual_nn)
+pred_actual_svm <- na.omit(pred_actual_svm)
+pred_actual_dt <- na.omit(pred_actual_dt)
+```
+
+```{r}
+model_performance <- data.frame(
+  Model.Name = c(
+    "Muliple Linear Regression",
+    "Support Vector Machine",
+    "Decision Tree",
+    "Neural Network"
+  ),
+  RMSE <- c(
+    Metrics::rmse(pred_actual_lm$Actual, pred_actual_lm$Prediction),
+    Metrics::rmse(pred_actual_svm$Actual, pred_actual_svm$Prediction),
+    Metrics::rmse(pred_actual_dt$Actual, pred_actual_dt$Prediction),
+    Metrics::rmse(pred_actual_nn$Actual, pred_actual_nn$V1)
+  )
+)
+colnames(model_performance) <- c("Model.Name", "RMSE")
+model_performance %>% kable()
+```
+
+```{r warning=FALSE}
+ggarrange(plot_lm,
+          plot_svm,
+          plot_dt,
+          plot_nn,
+          ncol = 2,
+          nrow = 2)
+```
+
+Based on the observations, it appears that multiple linear regression performs the best, followed by neural networks. On the other hand, the decision tree performs the worst for this data and should not be used for analysis.
+
+### 3.2. Subset(Stepwise) Selection
+
+Stepwise selection is a method that can be used to perform model selection, finding the best combination of predictor variables that explain the variance in the dependent variable. The primary objective is to create a model with a balance between goodness of fit and model complexity. This method includes forward selection, backward elimination, and bidirectional elimination.
+
+To perform stepwise selection, I will start with building a model to step:
+
+```{r}
+model_lm_low <- lm(Happiness.Score ~ Economy + Family + Life.Expectancy, data = dataset)
+```
+
+Using `step` function, I will perform stepwise selection using AIC:
+
+```{r}
+model_bestfit <-
+  stats::step(
+    model_lm_low,
+    scope = list(
+      lower = Happiness.Score ~ Economy + Family + Life.Expectancy,
+      upper = Happiness.Score ~ Economy + Family + Life.Expectancy + Freedom + Generosity + Trust + Dystopia.Residual
+    ),
+    direction = "both"
+  )
+```
+
+Lets examine the final best fit model:
+
+```{r}
+summary(model_bestfit)
+```
+
+The above summary statistics are for the final model selected based on the lowest AIC value. As shown, stepwise selection can sometimes lead to overfitting and may not be the best choice for the dataset. To further verify the model's performance, cross-validation can be performed.
+
+### 3.3. Cross-validation
+
+Cross-validation is a crucial technique in machine learning that assesses predictive models on unobserved data. It creates training and testing datasets to determine how well the model generalizes to new independent datasets, identifying potential sources of error and improving the model's overall performance. This technique is particularly useful for complex models or noisy datasets, providing valuable insights for practitioners looking to build accurate and reliable predictive models.
+
+To demonstrate cross-validation, I will use `caret` package.
+
+#### 3.3.1 Load processed data
+
+```{r}
+dataset <- get_happiness_data()[4:11]
+data_split <- caret::createDataPartition(dataset$Happiness.Score, p = 0.8, list = FALSE)
+training_data <- dataset[data_split, ]
+test_data <- dataset[-data_split, ]
+```
+
+#### 3.3.2 Cross-validate and train model
+
+```{r warning=FALSE, message=FALSE}
+set.seed(631)
+# Set up 10-fold cross-validation
+train_control <- caret::trainControl(method = "cv", number = 10)
+
+# Train the model using the "lm" method (linear regression) and cross-validation
+model_cv <- caret::train(Happiness.Score ~ Economy + Family + Life.Expectancy + Freedom + Generosity + Trust + Dystopia.Residual,
+                 data = training_data,
+                 method = "lm",
+                 trControl = train_control)
+
+```
+
+#### 3.3.3 Evaluate Performance
+
+```{r}
+# Model performance on the training set
+print(model_cv)
+
+# Predict on the test set
+predictions <- predict(model_cv, newdata = test_data)
+
+# Calculate the root mean squared error (RMSE) on the test set
+rmse <- sqrt(mean((test_data$Happiness.Score - predictions)^2))
+print(paste("RMSE on test data:", rmse))
+
+```
+
+The above output shows the root mean squared error(RMSE) value of 0.0009444075927725 indicating good performance.
+
+### 3.4 Conclusion
+
+In the previous section, I explored several approaches to perform model selection. Rather than relying on a single model, I explored several others with different parameters that yield better prediction accuracy and model interoperability. I also discovered that different statistical models have unique strengths and weaknesses. Therefore, it is important to clarify which model performs best for a given problem. Additionally, I gained different perspectives that various models offer, which can provide unique insights into the relationships between the variables. The model selection process also helps validate the findings, where various candidate models can satisfy assumptions and increase confidence.
+
+Overall, I believe that model selection is a crucial step in the data pipeline that can help build a robust model to solve complex problems. In the examples above, I applied various model selection techniques to the World Happiness Report dataset to predict the happiness score based on various variables. I found that multiple linear regression worked best for the given dataset and evaluated the model's performance using cross-validation.
+
+## 4. Communicate the results of statistical models to a general audience
+
+To communicate the results of a statistical model to a non-technical or a general audience, It is vital to simplify the results and generate easy to understand summary and data visualization. It is crucial to keep the message clear, concise, and easy to understand. As a rule of thumb, I've found that below steps works well:
+
+1.  State the purpose: By clearly stating the objective of the analysis and key questions(s) to answer, we can help the target audience understand the context and importance of finding.
+
+2.  Simple language: Always avoid complex technical jargon and statistical terminologies. We should use plain language to convey the findings.
+
+3.  Summarize findings: Clearly state the results of the analysis, emphasizing important and interesting insights.
+
+4.  Visualize data: Using graphs or other similar visual aids can help reach message to audience. It make information readily available and easier to digest.
+
+5.  Show limitations: Understand and acknowledge any limitations or uncertainties associated with the analysis, and provide context on how they might affect the results.
+
+### 4.1 Example
+
+To illustrate, I will use the popular `mtcars` dataset that ships with base R. This dataset contains data about various car models that we can use to perform a simple linear regression. To predict the miles per gallon (mpg) based on the car's weight (wt) and horsepower (hp), I will use the `lm()` function.
+
+Below is an example on how to communicate the results to a general audience:
+
+```{r}
+# Load the necessary libraries
+library(ggplot2)
+
+# Load the data
+data(mtcars)
+
+# Fit the linear model
+model <- lm(mpg ~ wt + hp, data = mtcars)
+```
+
+#### 4.1.1 Report
+
+I would like to share the results of a linear regression analysis we conducted using the `mtcars` dataset. Our primary goal was to understand how a car's weight and horsepower affect its fuel efficiency, measured in miles per gallon.
+
+To achieve this objective, we fitted a linear regression model that uses weight and horsepower as independent variables to predict miles per gallon. Below is a summary of our findings:
+
+1.  Weight: Our findings suggest that there is a negative relationship between a car's weight and its fuel efficiency. This means that as a car's weight increases, its miles per gallon tends to decrease. Heavier cars generally consume more fuel than lighter ones.
+2.  Horsepower: We found that horsepower also has a negative relationship with fuel efficiency. As horsepower increases, miles per gallon decreases. This suggests that cars with higher horsepower generally have lower fuel efficiency.
+
+```{r}
+# Display the summary of the model
+summary(model)
+```
+
+Our linear regression analysis revealed the following key statistical results:
+
+1.  Coefficients: The model's coefficients indicate the average change in the dependent variable (mpg) for a one-unit change in the independent variables (wt and hp), holding all other variables constant. Our coefficients are:
+
+    -   Intercept: 37.2273
+    -   Weight (wt): -3.8778
+    -   Horsepower (hp): -0.0318
+
+    This means that, on average, an increase in weight by 1,000 lbs is associated with a decrease in mpg by 3.8778 units, and an increase in horsepower by 1 unit is associated with a decrease in mpg by 0.0318 units.
+
+2.  Multiple R-squared: This statistic represents the proportion of variation in the dependent variable (mpg) that is explained by the independent variables (wt and hp). Our Multiple R-squared value is 0.8268, meaning that our model explains 82.68% of the variation in mpg.
+
+3.  F-statistic: The F-statistic is used to test the overall significance of the model, i.e., whether the independent variables (wt and hp) have a significant impact on the dependent variable (mpg). Our F-statistic is 70.91, with a very low p-value (\< 0.0001). This indicates that our model is statistically significant, and the independent variables have a meaningful impact on mpg.
+
+4.  Residual standard error: This statistic measures the average deviation of the observed values from the predicted values. Our residual standard error is 2.639, meaning that, on average, our model's predictions deviate from the actual mpg values by 2.639 units.
+
+To help visualize these relationships, we have included a visualization that demonstrates the actual data points, along with the fitted regression lines for each variable.
+
+```{r warning=FALSE, message=FALSE}
+ggplot(mtcars, aes(x = wt, y = mpg, color = hp)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    title = "Miles per Gallon vs. Weight and Horsepower",
+    x = "Weight (1000 lbs)",
+    y = "Miles per Gallon",
+    color = "Horsepower"
+  )
+```
+
+As shown in the graph above, there is a clear negative correlation between weight, horsepower, and miles per gallon. The data indicate that cars with lower weight and horsepower generally have better fuel efficiency.
+
+In summary, our analysis reveals that both weight and horsepower significantly influence a car's fuel efficiency. This information can be helpful for consumers when considering which car to purchase, as well as for car manufacturers looking to design more fuel-efficient vehicles.
+
+## 5. Use programming software (i.e., R) to fit and assess statistical models
+
+In the above models and illustrations, I used various R packages to fit and assess statistical models. Specifically, I used `lm()` to fit simple and linear regression models. I used the `glm()` function for generalized linear modeling, and `rpart` for decision tree analysis, `svm` for support vector machines, and `nn` for building neural networks. To assess the statistical models, I used functions such as `glance()` and `summary()` to determine goodness of fit and statistical significance. Additionally, I used the `predict()` function to make predictions on test data. Finally, I performed stepwise selection using the `step()` function and cross-validation using the `caret` package.
+
+## Conclusion
+
+I am pleased to confirm that I have successfully demonstrated my ability to achieve all five objectives described in the previous sections. In addition, I have completed all class activities, readings, and assignments on Blackboard to the best of my ability. As I progressed through the course, I gained valuable insights into different ways to build simple regression models and fairly complex statistical models using various types of datasets. I also expanded my knowledge in related areas such as data visualization, exploratory data analysis, and machine learning algorithms.
+
+In the portfolio and final project, I had the opportunity to apply all of my learning and showcase my skills in solving real-world problems. I was able to meet all of the required goals, and I am particularly proud of the insights and recommendations that I provided based on my analysis. However, I believe that there is always more to learn and explore. Therefore, I am excited to continue my journey in this field and take on different challenges in the future. I am confident that I will be able to use my skills and knowledge to make meaningful contributions to any team or project that I am a part of.

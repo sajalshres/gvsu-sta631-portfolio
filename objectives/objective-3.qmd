@@ -1,6 +1,16 @@
 ---
 title: "Objective 3"
+format: 
+  html:
+    code-fold: true
+    code-summary: "Show the code"
+    code-line-numbers: true
 ---
+
+```{r}
+source("../utils.R")
+```
+
 
 ## Model Selection
 
@@ -8,4 +18,244 @@ Course Objective:
 
 > Conduct model selection for a set of candidate models
 
-### TODO: Add content
+## Mini-Project: World Happiness Report
+
+Dataset: <https://worldhappiness.report/ed/2022/>
+
+```{r import-lib, warning=FALSE, message=FALSE, echo=FALSE}
+library("knitr")
+library("plyr")
+library("dplyr")
+library("tidyverse")
+library("lubridate")
+library("caTools")
+library("ggplot2")
+library("ggthemes")
+library("reshape2")
+library("data.table")
+library("tidyr")
+library("corrgram")
+library("corrplot")
+library("formattable")
+library("cowplot")
+library("ggpubr")
+library("rpart")
+library("rpart.plot")
+library("e1071")
+library("neuralnet")
+```
+
+Import data:
+
+```{r}
+Happiness <- read.csv("../data/happiness_report_2022.csv")
+
+str(Happiness)
+```
+
+Lets rename the columns, for sake of simplicity:
+
+```{r}
+colnames (Happiness) <-
+  c(
+    "Happiness.Rank",
+    "Country",
+    "Happiness.Score",
+    "Whisker.High",
+    "Whisker.Low",
+    "Dystopia.Residual",
+    "Economy",
+    "Family",
+    "Life.Expectancy",
+    "Freedom",
+    "Generosity",
+    "Trust"
+  )
+
+str(Happiness)
+```
+
+Select only required variables:
+
+```{r}
+Happiness <- Happiness %>% select(Country, Happiness.Rank, Happiness.Score, Economy, Family, Life.Expectancy, Freedom, Generosity, Trust, Dystopia.Residual)
+str(Happiness)
+```
+
+```{r}
+Happiness$Continent <- NA
+
+Happiness$Continent[which(Happiness$Country %in% get_countries_by_continent(continent =
+                                                                              "asia"))] <- "Asia"
+
+Happiness$Continent[which(Happiness$Country %in% get_countries_by_continent(continent =
+                                                                              "europe"))] <- "Europe"
+Happiness$Continent[which(Happiness$Country %in% get_countries_by_continent(continent =
+                                                                              "north america"))] <- "North America"
+Happiness$Continent[which(Happiness$Country %in% get_countries_by_continent(continent =
+                                                                              "south america"))] <- "South America"
+Happiness$Continent[which(Happiness$Country %in% get_countries_by_continent(continent =
+                                                                              "australia"))] <-
+  "Australia"
+Happiness$Continent[which(is.na(Happiness$Continent))] <- "Africa"
+
+# Moving the continent column's position in the dataset to the second column
+
+Happiness <- Happiness %>% select(Country, Continent, everything())
+
+# Changing Continent column to factor
+
+Happiness$Continent <- as.factor(Happiness$Continent)
+Happiness$Country <- as.factor(Happiness$Country)
+str(Happiness)
+```
+
+```{r}
+Happiness <- na.omit(Happiness) 
+```
+
+```{r}
+Num.cols <- sapply(Happiness, is.numeric)
+Cor.data <- cor(Happiness[, Num.cols])
+corrplot::corrplot(Cor.data,method = 'color', order = 'alphabet')  
+```
+
+## Modeling
+
+```{r}
+set.seed(631)
+dataset <- Happiness[4:11]
+split = sample.split(dataset$Happiness.Score, SplitRatio = 0.8)
+training_set = subset(dataset, split == TRUE)
+test_set = subset(dataset, split == FALSE)
+```
+
+```{r}
+model_lm = lm(formula = Happiness.Score ~ .,
+              data = training_set)
+
+y_pred_lm = predict(model_lm, newdata = test_set)
+pred_actual_lm <- as.data.frame(cbind(Prediction = y_pred_lm, Actual = test_set$Happiness.Score))
+plot_lm <- ggplot(pred_actual_lm, aes(Actual, Prediction)) +
+  geom_point() + theme_bw() + geom_abline() +
+  labs(title = "Multiple Linear Regression", x = "Actual Score",
+       y = "Predicted Score") +
+  theme(
+    plot.title = element_text(
+      size = (10)
+    ),
+    axis.title = element_text(size = (8))
+  )
+
+summary(model_lm)
+```
+
+```{r}
+model_svm = e1071::svm(
+  formula = Happiness.Score ~ .,
+  data = dataset,
+  type = 'eps-regression',
+  kernel = 'radial'
+)
+y_pred_svm = predict(model_svm,  newdata = test_set)
+pred_actual_svm <- as.data.frame(cbind(Prediction = y_pred_svm, Actual = test_set$Happiness.Score))
+pred_actual_svm.versus.svm <- cbind(Prediction.lm = y_pred_lm, Prediction.svm = y_pred_svm, Actual = test_set$Happiness.Score)
+
+plot_svm <- ggplot(pred_actual_svm, aes(Actual, Prediction )) +
+  geom_point() + theme_bw() + geom_abline() +
+  labs(title = "Support Vector Machine", x = "Actual Score",
+       y = "Predicted Score") +
+  theme(plot.title = element_text(size = (10)), 
+        axis.title = element_text(size = (8)))
+
+summary(model_svm)
+```
+
+```{r}
+model_dt = rpart::rpart(formula = Happiness.Score ~ .,
+                 data = dataset,
+                 control = rpart.control(minsplit = 10))
+
+y_pred_dt = predict(model_dt, newdata = test_set)
+
+pred_actual_dt <-
+  as.data.frame(cbind(Prediction = y_pred_dt, Actual = test_set$Happiness.Score))
+
+
+plot_dt <- ggplot(pred_actual_dt, aes(Actual, Prediction)) +
+  geom_point() + theme_bw() + geom_abline() +
+  labs(title = "Decision Tree", x = "Actual Score",
+       y = "Predicted Score") +
+  theme(plot.title = element_text(size = (10)),
+        axis.title = element_text(size = (8)))
+```
+
+```{r}
+rpart.plot(model_dt)
+```
+
+
+```{r}
+model_nn <-
+  neuralnet::neuralnet(
+    Happiness.Score ~ Economy + Family + Life.Expectancy + Freedom + Generosity + Trust + Dystopia.Residual,
+    data = training_set,
+    hidden = 10,
+    linear.output = TRUE
+  )
+
+predicted.nn.values <- compute(model_nn, test_set[, 2:8])
+
+pred_actual_nn <-
+  as.data.frame(
+    cbind(
+      Prediction = predicted.nn.values$net.result,
+      Actual = test_set$Happiness.Score
+    )
+  )
+
+plot_nn <- ggplot(pred_actual_nn, aes(Actual, V1)) +
+  geom_point() + theme_bw() + geom_abline() +
+  labs(title = "Neural Network", x = "Actual Score",
+       y = "Predicted Score") +
+  theme(plot.title = element_text(size = (10)),
+        axis.title = element_text(size = (8)))
+```
+
+```{r}
+plot(model_nn)
+```
+```{r warning=FALSE, message=FALSE, echo=FALSE}
+pred_actual_lm<- na.omit(pred_actual_lm)
+pred_actual_nn<- na.omit(pred_actual_nn)
+pred_actual_svm <- na.omit(pred_actual_svm)
+pred_actual_dt <- na.omit(pred_actual_dt)
+```
+
+```{r}
+model_performance <- data.frame(
+  Model.Name = c(
+    "Muliple Linear Regression",
+    "Support Vector Machine",
+    "Decision Tree",
+    "Neural Network"
+  ),
+  RMSE <- c(
+    Metrics::rmse(pred_actual_lm$Actual, pred_actual_lm$Prediction),
+    Metrics::rmse(pred_actual_svm$Actual, pred_actual_svm$Prediction),
+    Metrics::rmse(pred_actual_dt$Actual, pred_actual_dt$Prediction),
+    Metrics::rmse(pred_actual_nn$Actual, pred_actual_nn$V1)
+  )
+)
+colnames(model_performance) <- c("Model.Name", "RMSE")
+model_performance %>% kable()
+```
+
+```{r warning=FALSE}
+ggarrange(plot_lm,
+          plot_svm,
+          plot_dt,
+          plot_nn,
+          ncol = 2,
+          nrow = 2)
+```
